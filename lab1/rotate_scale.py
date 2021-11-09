@@ -95,10 +95,5 @@ if __name__ == '__main__':
             else:
                 result[row][col] = bilinear_interpolation(pos_vec, image)
 
-    # print(image)
-
-    # print(result)
-
     img_new = Image.fromarray(result.astype('uint8'), mode="L")
     img_new.save("result.bmp")
-    pass
