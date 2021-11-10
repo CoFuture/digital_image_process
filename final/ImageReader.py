@@ -15,7 +15,7 @@ class ImageReader:
             for i in range(self.image_height):
                 line_temp = []
                 for j in range(self.image_width):
-                    pixel_data = int.from_bytes(f.read(2), byteorder="little", signed=False) & 255
+                    pixel_data = int.from_bytes(f.read(2), byteorder="little", signed=False) & 4095
                     line_temp.append(pixel_data)
                 self.image_array.append(line_temp)
 
@@ -36,12 +36,12 @@ class ImageReader:
 
 
 if __name__ == '__main__':
-    reader = ImageReader("images_raw/lumbar.raw")
-    # print(reader.image_width, reader.image_height)
+    reader = ImageReader("images_raw/vertebra.raw")
     # print(b'\x01' + b'\x02')
     image_array = reader.getImageArray()
     print(reader.image_height, reader.image_width, image_array.shape)
-    # cv2.imshow(image_array)
+
+    # 图像保存
     img_new = Image.fromarray(image_array.astype('uint8'), mode="L")
-    img_new.save("lumbar.png")
+    img_new.save("vertebra.png")
     pass
