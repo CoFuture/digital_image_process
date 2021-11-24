@@ -19,8 +19,7 @@ class ImageReader:
 
     # 获取图像数组
     def getImageArrayRaw(self):
-
-        pass
+        return self.image_array
 
     def getImageArray(self):
         array = np.array(self.image_array)
@@ -47,6 +46,30 @@ class ImageWriter:
                 for j in range(image_width):
                     pixel_byte = int(self.image_array[i][j]).to_bytes(2, byteorder='little', signed=False)
                     f.write(pixel_byte)
+
+
+# 图像处理类，进行基本变换：灰度窗映射
+class ImageHandler:
+    def __init__(self, image):
+        self.image = image
+
+    # 灰度化处理
+    def toGreyImage(self):
+        pass
+
+    # 灰度窗映射
+    def greyWindowMapping(self, width, position):
+        # input： 灰度窗的宽度，灰度窗位置
+        pass
+
+    # 局部放大
+    def partZoom(self, position, factor):
+        # input: 放大位置， 放大系数factor
+        pass
+
+    # 细节增强
+    def detailAugment(self):
+        pass
 
 
 if __name__ == '__main__':
