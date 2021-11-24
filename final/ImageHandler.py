@@ -1,4 +1,6 @@
 import numpy as np
+import math
+import copy
 import cv2
 from PIL import Image
 
@@ -58,8 +60,26 @@ class ImageHandler:
         pass
 
     # 灰度窗映射
-    def greyWindowMapping(self, width, position):
+    def greyWindowMapping(self, width, pos_value):
         # input： 灰度窗的宽度，灰度窗位置
+        # 小于灰度窗 映射到 0
+        # 大于灰度窗 映射到 255
+        # 灰度窗之间 0～255线性映射
+
+        window_min = pos_value - int(round(width / 2))
+        window_max = pos_value + int(round(width / 2))
+
+        assert window_min >= 0
+        assert window_max <= 4095
+
+        image_temp = copy.deepcopy(self.image)
+
+        for i in range(self.image.shape[0]):
+            for j in range(self.image.shape[1]):
+                if image_temp[i][j] > 0:
+                    pass
+
+
         pass
 
     # 局部放大
@@ -73,11 +93,11 @@ class ImageHandler:
 
 
 if __name__ == '__main__':
-    # reader = ImageReader("images_raw/vertebra.raw")
-    reader = ImageReader("test.raw")
+    reader = ImageReader("images_raw/vertebra.raw")
+    # reader = ImageReader("test.raw")
     # print(b'\x01' + b'\x02')
     image_array = reader.getImageArray()
-    # print(reader.image_height, reader.image_width, image_array.shape)
+    print(reader.image_height, reader.image_width, image_array.shape, type(image_array))
     #
     # # 测试写功能
     # writer = ImageWriter(image_array)
