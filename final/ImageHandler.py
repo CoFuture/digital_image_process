@@ -21,7 +21,7 @@ class ImageReader:
 
     # 获取图像数组
     def getImageArrayRaw(self):
-        return self.image_array
+        return np.array(self.image_array)
 
     def getImageArray(self):
         array = np.array(self.image_array)
@@ -53,6 +53,7 @@ class ImageWriter:
 # 图像处理类，进行基本变换：灰度窗映射
 class ImageHandler:
     def __init__(self, image):
+        # 输入图像 4096级灰度图像
         self.image = image
 
     # 灰度化处理
@@ -76,11 +77,15 @@ class ImageHandler:
 
         for i in range(self.image.shape[0]):
             for j in range(self.image.shape[1]):
-                if image_temp[i][j] > 0:
-                    pass
+                if image_temp[i][j] < window_min:
+                    image_temp[i][j] = 0
+                elif image_temp[i][j] > window_max:
+                    image_temp[i][j] = 255
+                else:
+                    # 线性映射
+                    image_temp[i][j] = int(math.floor((image_temp[i][j] - window_min) / width * 255))
 
-
-        pass
+        return image_temp
 
     # 局部放大
     def partZoom(self, position, factor):
@@ -97,7 +102,8 @@ if __name__ == '__main__':
     # reader = ImageReader("test.raw")
     # print(b'\x01' + b'\x02')
     image_array = reader.getImageArray()
-    print(reader.image_height, reader.image_width, image_array.shape, type(image_array))
+    image_array_raw = reader.getImageArrayRaw()
+    print(reader.image_height, reader.image_width)
     #
     # # 测试写功能
     # writer = ImageWriter(image_array)
