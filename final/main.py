@@ -4,13 +4,18 @@ from final.ImageHandler import ImageReader, ImageWriter, ImageHandler
 from final import basicTransform as T
 import numpy as np
 
+image = None
+image_tk = None
+
 
 class Application:
     def __init__(self, window):
         assert window is not None
         self.window = window
-
-        self.initWindow()
+        self.window.title("my window")
+        # screen_w = self.window.winfo_screenwidth()
+        # screen_h = self.window.winfo_screenheight()
+        self.window.geometry("1080x720")
 
         # 图片功能控件
         self.reader = None
@@ -34,25 +39,27 @@ class Application:
         self.frame2_left = Frame(self.frame2)
         self.frame2_right = Frame(self.frame2)
 
-        self.canvas = Canvas(self.frame2_left, height=600, width=600, bg='gray')
+        self.canvas = Canvas(self.frame2_left, height=700, width=700, bg='gray')
         self.canvas.pack()
 
         # 功能栏 功能1 选择图像
         self.fn1_frame = Frame(self.frame2_right, borderwidth=2, relief="solid")
         self.fn1_frame1 = Frame(self.fn1_frame)
-        self.label1 = Label(self.fn1_frame1, text="选择图像", font=('微软雅黑', 15))
-        self.label1.pack()
+        self.fn1_label1 = Label(self.fn1_frame1, text="选择图像", font=('微软雅黑', 15))
+        self.fn1_label1.pack()
         self.fn1_frame1.pack(side=TOP, fill=BOTH)
 
+        # 图片选中的id
         self.v_img_select = IntVar()
-        self.v_img_select.set(2)
+        self.v_img_select.set(1)
 
         self.fn1_frame2 = Frame(self.fn1_frame)
-        self.radio1 = Radiobutton(self.fn1_frame2, text="lumbar", font=('微软雅黑', 12), variable=self.v_img_select,
-                                  value=1)
-        self.radio2 = Radiobutton(self.fn1_frame2, text="lung", font=('微软雅黑', 12), variable=self.v_img_select, value=2)
-        self.radio3 = Radiobutton(self.fn1_frame2, text="vertebra", font=('微软雅黑', 12), variable=self.v_img_select,
-                                  value=3)
+        self.radio1 = Radiobutton(self.fn1_frame2, text="lumbar", font=('微软雅黑', 13), variable=self.v_img_select,
+                                  value=1, command=self.selectImage)
+        self.radio2 = Radiobutton(self.fn1_frame2, text="lung", font=('微软雅黑', 13), variable=self.v_img_select, value=2,
+                                  command=self.selectImage)
+        self.radio3 = Radiobutton(self.fn1_frame2, text="vertebra", font=('微软雅黑', 13), variable=self.v_img_select,
+                                  value=3, command=self.selectImage)
 
         self.radio1.pack(side=LEFT, padx=5, pady=10)
         self.radio2.pack(side=LEFT, padx=5, pady=10)
@@ -60,12 +67,40 @@ class Application:
         self.fn1_frame2.pack(side=TOP, fill=BOTH)
 
         self.fn1_frame.pack(side=TOP, fill=BOTH, pady=10)
+
         # 功能栏 功能2 灰度窗映射
-        self.fn2_frame = Frame(self.frame2_right)
-        self.fn2_frame1 = Frame(self.frame2_right)
-        self.label2 = Label(self.fn2_frame1, text="灰度窗映射", font=('微软雅黑', 10))
-        self.label2.pack(side=LEFT)
-        self.fn2_frame1.pack(side=TOP)
+        self.fn2_frame = Frame(self.frame2_right, borderwidth=2, relief="solid")
+        self.fn2_frame1 = Frame(self.fn2_frame)
+        self.fn2_label1 = Label(self.fn2_frame1, text="灰度窗映射", font=('微软雅黑', 15))
+        self.fn2_label1.pack(side=LEFT)
+        self.fn2_frame1.pack()
+
+        self.fn2_frame2 = Frame(self.fn2_frame)
+        self.fn2_label2 = Label(self.fn2_frame2, text="窗大小", font=('微软雅黑', 13))
+        self.fn2_label2.pack(side=LEFT, padx=15, pady=8)
+        self.fn2_entry1 = Entry(self.fn2_frame2, bd=2)
+        self.fn2_entry1.pack(side=RIGHT, fill=BOTH, pady=8)
+        self.fn2_frame2.pack()
+
+        self.fn2_frame3 = Frame(self.fn2_frame)
+        self.fn2_label3 = Label(self.fn2_frame3, text="窗位置", font=('微软雅黑', 13))
+        self.fn2_label3.pack(side=LEFT, padx=15, pady=8)
+        self.fn2_entry2 = Entry(self.fn2_frame3, bd=2)
+        self.fn2_entry2.pack(side=RIGHT, fill=BOTH, pady=8)
+        self.fn2_frame3.pack()
+
+        self.fn2_frame4 = Frame(self.fn2_frame)
+        self.fn2_btn1 = Button(self.fn2_frame4, text="apply", font=('微软雅黑', 13), width=8,
+                               command=self.applyGrayWindowTransform)
+        self.fn2_btn1.pack(side=LEFT, padx=12, pady=8)
+        self.fn2_btn2 = Button(self.fn2_frame4, text="reset", font=('微软雅黑', 13), width=8,
+                               command=self.resetGrayWindowTransform)
+        self.fn2_btn2.pack(side=RIGHT, padx=12, pady=8)
+        self.fn2_frame4.pack()
+
+        self.fn2_frame.pack(side=TOP, fill=BOTH, pady=10)
+
+        # 功能栏 功能3 图像细节增强
 
         self.frame2_left.pack(side=LEFT, padx=13, pady=13)
         self.frame2_right.pack(side=RIGHT, padx=13, pady=13)
@@ -84,6 +119,45 @@ class Application:
 
     # 选择图片
     def selectImage(self):
+        # 获取图片id
+        radio_id = self.v_img_select.get()
+
+        print(radio_id, type(radio_id))
+
+        if radio_id == 1:
+            self.v_title_text.set("lumbar.raw")
+            self.reader = ImageReader("images_raw/lumbar.raw")
+        elif radio_id == 2:
+            self.v_title_text.set("lung.raw")
+            self.reader = ImageReader("images_raw/lung.raw")
+        else:
+            self.v_title_text.set("vertebra.raw")
+            self.reader = ImageReader("images_raw/vertebra.raw")
+
+        # 设置画布中的图片
+        global image
+        global image_tk
+        image = Image.fromarray(self.reader.getImageArray().astype('uint8'), mode="L")
+
+        # image_h = image2show.height
+        # image_w = image2show.width
+        # print(image_h, image_w)
+
+        image = image.resize((700, 700))
+        image_tk = ImageTk.PhotoImage(image)
+        self.canvas.create_image(0, 0, anchor=NW, image=image_tk)
+
+    # 应用灰度窗
+    def applyGrayWindowTransform(self):
+        # 获取参数
+
+        # 调用函数
+        print("apply")
+        pass
+
+    # 应用灰度窗
+    def resetGrayWindowTransform(self):
+        print("reset")
         pass
 
     # 应用变换
