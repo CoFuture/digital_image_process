@@ -123,10 +123,6 @@ class ImageHandler:
     def detailAugment(self):
         pass
 
-    # 图像锐化
-    def sharpen(self):
-        pass
-
     # 直方图均衡
     # input 4096级灰度
     # output 4096级灰度
@@ -158,7 +154,7 @@ class ImageHandler:
 
         return result
 
-    # 平均空间滤波器
+    # 平滑 —— 平均空间滤波器
     def averageFilter(self, kernel_size=3, method="replicate"):
         height = self.image.shape[0]
         width = self.image.shape[1]
@@ -209,7 +205,7 @@ class ImageHandler:
 
         return result
 
-    # 高斯滤波器
+    # 平滑 —— 高斯滤波器
     def gaussianFilter(self, kernel_size=3, sigma=1, method="replicate"):
         height = self.image.shape[0]
         width = self.image.shape[1]
@@ -272,6 +268,124 @@ class ImageHandler:
 
         return result
 
+    # 锐化 —— sobel
+    def sobelFilter(self, filter_kind=1, padding="replace"):
+        height = self.image.shape[0]
+        width = self.image.shape[1]
+
+        result = np.empty([height, width], dtype=int)
+        kernel_size = 3
+
+        if filter_kind == 1:
+            # 突出竖直边缘
+            k_filter = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]])
+        elif filter_kind == 2:
+            # 突出水平边缘
+            k_filter = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]])
+        else:
+            k_filter = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]])
+
+        for i in range(height):
+            for j in range(width):
+
+                # 在核内遍历
+                total = 0
+                for k in range(pow(kernel_size, 2)):
+                    # 在核内的坐标，以左上角为中心
+                    k_row = k // kernel_size
+                    k_col = k % kernel_size
+
+                    # 在核内的坐标，以核中心为原地
+                    row_bias = int(k_row - (kernel_size - 1) / 2)
+                    col_bias = int(k_col - (kernel_size - 1) / 2)
+
+                    f_value = k_filter[k_row][k_col]
+                    # 特殊情况处理
+                    if i + row_bias <= 0:
+                        if j + col_bias <= 0:
+                            total += self.image[0][0] * f_value
+                        elif j + col_bias >= width - 1:
+                            total += self.image[0][-1] * f_value
+                        else:
+                            total += self.image[0][j + col_bias] * f_value
+                    elif i + row_bias >= height - 1:
+                        if j + col_bias <= 0:
+                            total += self.image[-1][0] * f_value
+                        elif j + col_bias >= width - 1:
+                            total += self.image[-1][-1] * f_value
+                        else:
+                            total += self.image[-1][j + col_bias] * f_value
+                    else:
+                        if j + col_bias <= 0:
+                            total += self.image[i + row_bias][0] * f_value
+                        elif j + col_bias >= width - 1:
+                            total += self.image[i + row_bias][-1] * f_value
+                        else:
+                            total += self.image[i + row_bias][j + col_bias] * f_value
+
+                result[i][j] = abs(total)
+
+        return result
+
+    # 锐化 —— Laplace
+    def laplaceFilter(self, filter_kind=2, padding="replace"):
+        height = self.image.shape[0]
+        width = self.image.shape[1]
+
+        result = np.empty([height, width], dtype=int)
+        kernel_size = 3
+
+        if filter_kind == 1:
+            k_filter = np.array([[0, 1, 0], [1, -4, 1], [0, 1, 0]])
+        elif filter_kind == 2:
+            k_filter = np.array([[1, 1, 1], [1, -8, 1], [1, 1, 1]])
+        elif filter_kind == 3:
+            k_filter = np.array([[1, 4, 1], [4, -20, 4], [1, 4, 1]])
+        else:
+            k_filter = np.array([[0, 1, 0], [1, -4, 1], [0, 1, 0]])
+
+        for i in range(height):
+            for j in range(width):
+
+                # 在核内遍历
+                total = 0
+                for k in range(pow(kernel_size, 2)):
+                    # 在核内的坐标，以左上角为中心
+                    k_row = k // kernel_size
+                    k_col = k % kernel_size
+
+                    # 在核内的坐标，以核中心为原地
+                    row_bias = int(k_row - (kernel_size - 1) / 2)
+                    col_bias = int(k_col - (kernel_size - 1) / 2)
+
+                    f_value = k_filter[k_row][k_col]
+                    # 特殊情况处理
+                    if i + row_bias <= 0:
+                        if j + col_bias <= 0:
+                            total += self.image[0][0] * f_value
+                        elif j + col_bias >= width - 1:
+                            total += self.image[0][-1] * f_value
+                        else:
+                            total += self.image[0][j + col_bias] * f_value
+                    elif i + row_bias >= height - 1:
+                        if j + col_bias <= 0:
+                            total += self.image[-1][0] * f_value
+                        elif j + col_bias >= width - 1:
+                            total += self.image[-1][-1] * f_value
+                        else:
+                            total += self.image[-1][j + col_bias] * f_value
+                    else:
+                        if j + col_bias <= 0:
+                            total += self.image[i + row_bias][0] * f_value
+                        elif j + col_bias >= width - 1:
+                            total += self.image[i + row_bias][-1] * f_value
+                        else:
+                            total += self.image[i + row_bias][j + col_bias] * f_value
+
+                result[i][j] = abs(total)
+
+        return result
+
 
 if __name__ == '__main__':
     reader = ImageReader("images_raw/lumbar.raw")
@@ -288,7 +402,7 @@ if __name__ == '__main__':
     # image_temp = handler.partZoom(800, 800, 3, 3, 1000, 1000)     # 局部放大测试
     # image_temp = T.to8BitImage(handler.histEqual())     # 直方图均衡化测试
     # image_temp = T.to8BitImage(handler.averageFilter())     # 平均滤波测试
-    image_temp = T.to8BitImage(handler.gaussianFilter())     # 高斯滤波测试
+    image_temp = T.to8BitImage(handler.gaussianFilter())  # 高斯滤波测试
     img_result = Image.fromarray(image_temp.astype('uint8'), mode="L")
     img_result.show()
     # img_result.save("result.png")
